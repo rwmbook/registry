@@ -9,6 +9,7 @@ var registry = require('./../components/registry.js');
 var utils = require('./utils.js');
 var wstl = require('./../wstl.js');
 var gTitle = "DISCO Registry";
+var config = require('./../config.js');
 
 module.exports = main;
 
@@ -41,10 +42,17 @@ function postBind(req, res, respond) {
   req.on('end', function() {
     try {
       msg = utils.parseBody(body, req.headers["content-type"]);
-      msg.id = msg.registryID;
-      if(registry('exists',msg.id)===false) {
+      if(msg.sourceRegID && msg.targetRegID) {
+        var dt = new Date();
+        var token = config.registryKey + ":"+msg.sourceRegID+":"+msg.targetRegID+":"+dt.toUTCString();
+        msg.bindToken = "simple:"+Buffer.from(token).toString('base64');
+        console.log(token);
+        console.log(msg);
+        console.log(Buffer.from(msg.bindToken.substring(7),'base64').toString('ascii'));
+      }
+      else {
         doc.type="error"
-        doc.message="404 Not Found";
+        doc.message="Not Found";
         doc.code = 404;
       }      
       if(doc && doc.type==='error') {
@@ -53,9 +61,9 @@ function postBind(req, res, respond) {
     } 
     catch (ex) {
       doc = utils.errorResponse(req, res, 'Server Error', 500);
-    }
+   }
 
-    respond(req, res, {code:301, doc:(!doc?"":doc), 
+    respond(req, res, {code:200, doc:(!doc?"":doc), 
       headers:{'location':'//'+req.headers.host+"/find/?id="+msg.id}
     });
   });

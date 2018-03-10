@@ -10,6 +10,7 @@ var querystring = require('querystring');
 
 /// internal modules
 var representation = require('./representor.js');
+var config = require('./config.js');
 
 // connector modules
 var home = require('./connectors/home.js');
@@ -42,7 +43,7 @@ var reBind = new RegExp('^\/bind\/.*','i');
 var reFile = new RegExp('^\/files\/.*','i');
 
 // set up unregister old entries
-setInterval(function(){unregEntries()},10000);
+setInterval(function(){unregEntries()},config.unregTTL);
 
 // request handler
 function handler(req, res) {
