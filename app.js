@@ -17,7 +17,10 @@ var reg = require('./connectors/reg.js');
 var unreg = require('./connectors/unreg.js');
 var renew = require('./connectors/renew.js');
 var find = require('./connectors/find.js');
+var bind = require('./connectors/bind.js');
 var utils = require('./connectors/utils.js');
+
+var registry = require('./components/registry.js');
 
 // shared vars
 var root = '';
@@ -35,7 +38,11 @@ var reReg = new RegExp('^\/reg\/.*','i');
 var reRenew = new RegExp('^\/renew\/.*','i');
 var reUnreg = new RegExp('^\/unreg\/.*','i');
 var reFind = new RegExp('^\/find\/.*','i');
+var reBind = new RegExp('^\/bind\/.*','i');
 var reFile = new RegExp('^\/files\/.*','i');
+
+// set up unregister old entries
+setInterval(function(){unregEntries()},10000);
 
 // request handler
 function handler(req, res) {
@@ -102,6 +109,12 @@ function handler(req, res) {
     doc = find(req, res, parts, handleResponse);
   }
 
+  // bind handler
+  if(reBind.test(req.url)) {
+    flg = true;
+    doc = bind(req, res, parts, handleResponse);
+  }
+
   // file handler
   try {
     if(flg===false && reFile.test(req.url)) {
@@ -162,3 +175,32 @@ function sendResponse(req, res, body, code, headers) {
 http.createServer(handler).listen(port);
 console.log('registry service listening on port '+port);
 
+// handle evicting bad entries
+function unregEntries() {
+  var list;
+
+  list = registry('list');
+  console.log('unregEntries');
+  if(list) {
+    for (i=0,x=list.length;i<x;i++) {
+      // expired renewals
+      if(list[i].renewLastPing!=='' && list[i].renewTTL!=='') {
+        d = new Date(list[i].renewLastPing);
+        t = new Date();
+        d.setTime(d.getTime() + parseInt(list[i].renewTTL));
+        if(t>d) {
+          registry('remove',list[i].id);
+        }
+      }
+      // never renewed
+      if(list[i].dateUpdated!=='' && list[i].renewLastPing==='') {
+        d = new Date(list[i].dateUpdated);
+        t = new Date();
+        d.setTime(d.getTime() + 600000);
+        if(t>d) {
+          registry('remove',list[i].id);
+        }
+      }
+    }
+  }
+}

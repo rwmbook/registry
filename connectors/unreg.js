@@ -61,7 +61,7 @@ function postRemove(req, res, respond) {
       });
     } 
     else {
-      respond(req, res, {code:301, doc:"", 
+      respond(req, res, {code:301, doc:doc, 
         headers:{'location':'//'+req.headers.host+"/"}
       });
     }
@@ -109,6 +109,7 @@ function sendPage(req, res, respond) {
   coll = wstl.append({name:"unregisterLink",href:"/unreg/",rel:["delete-form", "unregister", "unreglink"], root:root},coll);
   coll = wstl.append({name:"renewLink",href:"/renew/",rel:["edit-form", "renew", "renewlink"], root:root},coll);
   coll = wstl.append({name:"findLink",href:"/find/",rel:["search", "find", "findlink"], root:root},coll);
+  coll = wstl.append({name:"bindLink",href:"/bind/",rel:["search", "bind", "bindlink"], root:root},coll);
 
   coll = wstl.append({name:"unregisterForm", href:"/unreg/",rel:["create-form", "unregister", "unregform"], root:root}, coll);
   
@@ -128,7 +129,7 @@ function sendPage(req, res, respond) {
   respond(req, res, {
     code : 200,
     doc : {
-      home : doc
+      disco : doc
     }
   });
   
