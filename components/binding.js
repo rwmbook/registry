@@ -20,6 +20,7 @@ function main(action, args1, args2, args3) {
     "registryKey",
     "sourceRegID",
     "targetRegID",
+    "bindToken",
     "dateCreated"
   ];
 
@@ -67,6 +68,7 @@ function addEntry(elm, entry, props) {
   item.registryKey = (entry.registryKey||"");
   item.sourceRegID = (entry.sourceRegID||"");
   item.targetRegID = (entry.targetRegID||"");
+  item.bindToken = (entry.bindToken||"");
   
   if(item.registryKey === "") {
     error += "Missing registryKey ";
