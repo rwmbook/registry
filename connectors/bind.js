@@ -6,6 +6,7 @@
 
 // handles HTTP resource operations 
 var registry = require('./../components/registry.js');
+var binding = require('./../components/binding.js');
 var utils = require('./utils.js');
 var wstl = require('./../wstl.js');
 var gTitle = "DISCO Registry";
@@ -17,7 +18,7 @@ function main(req, res, parts, respond) {
 
   switch (req.method) {
   case 'GET':
-    sendPage(req, res, respond);
+    sendPage(req, res, respond, utils.getQArgs(req));
     break;
   case 'POST':
     postBind(req, res, respond);
@@ -40,14 +41,16 @@ function postBind(req, res, respond) {
 
   // process body
   req.on('end', function() {
-    try {
+    //try {
       msg = utils.parseBody(body, req.headers["content-type"]);
       if(msg.sourceRegID && msg.targetRegID) {
         var dt = new Date();
         var token = config.registryKey + ":"+msg.sourceRegID+":"+msg.targetRegID+":"+dt.toUTCString();
+        msg.registryKey = config.registryKey;
         msg.bindToken = "simple:"+Buffer.from(token).toString('base64');
+        doc = binding('add',msg);
         console.log(token);
-        console.log(msg);
+        console.log(doc);
         console.log(Buffer.from(msg.bindToken.substring(7),'base64').toString('ascii'));
       }
       else {
@@ -58,23 +61,23 @@ function postBind(req, res, respond) {
       if(doc && doc.type==='error') {
         doc = utils.errorResponse(req, res, doc.message, doc.code);
       }
-    } 
-    catch (ex) {
-      doc = utils.errorResponse(req, res, 'Server Error', 500);
-   }
+    //} 
+    //catch (ex) {
+    //  doc = utils.errorResponse(req, res, 'Server Error', 500);
+   //}
 
-    respond(req, res, {code:200, doc:(!doc?"":doc), 
-      headers:{'location':'//'+req.headers.host+"/find/?id="+msg.id}
+    respond(req, res, {code:301, doc:doc, 
+      headers:{'location':'//'+req.headers.host+"/bind/?id="+doc.id}
     });
   });
 }
 
-function sendPage(req, res, respond) {
+function sendPage(req, res, respond, args) {
   var doc, coll, root, data, related, content;
 
   root = 'http://'+req.headers.host;
   coll = [];
-  data = [];
+  data = (args?binding('filter',args):binding('list'));
   related = {};
   content = "";
   
@@ -103,7 +106,7 @@ function sendPage(req, res, respond) {
   respond(req, res, {
     code : 200,
     doc : {
-      disco : doc
+      bind : doc
     }
   });
   

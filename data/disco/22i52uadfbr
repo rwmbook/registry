@@ -1,0 +1,1 @@
+{"id":"22i52uadfbr","serviceURL":"http://localhost:8484/","serviceName":"uuid-generator","semanticProfile":"","requestMediaType":"*/*","responseMediaType":"*/*","healthURL":"","healthTTL":"60000","healthLastPing":"","renewTTL":"30000","renewLastPing":"2018-03-11T01:47:13.082Z","tags":"","dateCreated":"2018-03-11T01:31:12.452Z","dateUpdated":"2018-03-11T01:47:13.083Z"}
