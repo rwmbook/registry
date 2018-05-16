@@ -1,6 +1,6 @@
 /*******************************************************
  * service: disco registry
- * module: generic file data storage
+ * module: simple storage (via files)
  * Mike Amundsen (@mamund)
  *******************************************************/
 
@@ -34,31 +34,32 @@ function main(args) {
   var item = args.item||{};
 
   switch (action) {
-  case 'list':
-    rtn = getList(object);
-    break;
-  case 'filter':
-    rtn = getList(object, filter);
-    break;
-  case 'item':
-    rtn = getItem(object, id);
-    break;
-  case 'add':
-    rtn = addItem(object, item, id);
-    break;
-  case 'update':
-    rtn = updateItem(object, id, item);
-    break;
-  case 'remove':
-    rtn = removeItem(object, id);
-    break;
-  default:
-    rtn = null;
-    break;
+    case 'list':
+      rtn = getList(object);
+      break;
+    case 'filter':
+      rtn = getList(object, filter);
+      break;
+    case 'item':
+      rtn = getItem(object, id);
+      break;
+    case 'add':
+      rtn = addItem(object, item, id);
+      break;
+    case 'update':
+      rtn = updateItem(object, item, id);
+      break;
+    case 'remove':
+      rtn = removeItem(object, id);
+      break;
+    default:
+      rtn = null;
+      break;
   }
   return rtn;
 }
 
+// get a list of items (possibly via filter)
 function getList(object, filter) {
   var coll, item, list, i, x, t, name;
 
@@ -67,7 +68,7 @@ function getList(object, filter) {
     list = fs.readdirSync(folder + object + '/');
     for (i = 0, x = list.length; i < x; i++) {
       item = JSON.parse(fs.readFileSync(folder + object + '/' + list[i]));
-      if (filter) {
+      if (filter && filter!==null) {
         t = null;
         for (var name in filter) {
           if(filter[name].toString().length!==0) {
@@ -96,6 +97,7 @@ function getList(object, filter) {
   return coll;
 }
 
+// retrieve and existing item
 function getItem(object, id) {
   var rtn;
 
@@ -108,6 +110,7 @@ function getItem(object, id) {
   return rtn;
 }
 
+// add a new item
 function addItem(object, item, id) {
   var rtn;
 
@@ -120,7 +123,7 @@ function addItem(object, item, id) {
   item.dateUpdated = item.dateCreated;
 
   if (fs.existsSync(folder + object + '/' + item.id)) {
-    rtn = utils.exception("DISCO", "Record already exists");
+    rtn = utils.exception("SimpleStorage: ["+object+"]", "Record already exists");
   } else {
     try {
       fs.writeFileSync(folder + object + '/' + item.id, JSON.stringify(item));
@@ -132,12 +135,13 @@ function addItem(object, item, id) {
   return rtn;
 }
 
-function updateItem(object, id, item) {
+// modify an existing item
+function updateItem(object, item, id) {
   var current, rtn;
 
   current = getItem(object, id);
   if (!current) {
-    rtn = utils.exception("DISCO", "Invalid [id]", 400);
+    rtn = utils.exception("SimpleStorage: ["+object+"]", "Invalid [id]", 400);
     return rtn;
   }
    
@@ -155,6 +159,7 @@ function updateItem(object, id, item) {
   return rtn;
 }
 
+// remove the item
 function removeItem(object, id) {
   var rtn;
 
@@ -167,6 +172,7 @@ function removeItem(object, id) {
   return rtn;
 }
 
+// generate a unique id 
 function makeId() {
   var rtn;
 
