@@ -1,4 +1,4 @@
-/*******************************************************
+/*`******************************************************
  * DISCO - Discover service
  * registry middleware component (server)
  * Mike Amundsen (@mamund)

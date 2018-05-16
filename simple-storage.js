@@ -15,7 +15,6 @@
 
 var fs = require('fs');
 var folder = process.cwd() + '/data/';
-var utils = require('./connectors/utils.js');
 
 module.exports = main;
 
@@ -24,9 +23,9 @@ module.exports = main;
  * {object:"",action:"",filter:"",id:"",item:objItem}
  */
 function main(args) {
-//function main(object, action, arg1, arg2, arg3) {
   var rtn;
 
+  // resolve arguments
   var action = args.action||"";
   var object = args.object||null;
   var filter = args.filter||null;
@@ -104,7 +103,7 @@ function getItem(object, id) {
   try {
     rtn = JSON.parse(fs.readFileSync(folder + object + '/' + id));
   } catch (ex) {
-    rtn = null;
+    rtn = exception("SimpleStorage: ["+object+"]", ex.message, 400);
   }
 
   return rtn;
@@ -123,13 +122,13 @@ function addItem(object, item, id) {
   item.dateUpdated = item.dateCreated;
 
   if (fs.existsSync(folder + object + '/' + item.id)) {
-    rtn = utils.exception("SimpleStorage: ["+object+"]", "Record already exists");
+    rtn = exception("SimpleStorage: ["+object+"]", "Record already exists");
   } else {
     try {
       fs.writeFileSync(folder + object + '/' + item.id, JSON.stringify(item));
       rtn = getItem(object, item.id);
     } catch (ex) {
-      rtn = null;
+      rtn = exeption("SimpleStorage: ["+object+"]", ex.message, 400);
     }
   }
   return rtn;
@@ -141,7 +140,7 @@ function updateItem(object, item, id) {
 
   current = getItem(object, id);
   if (!current) {
-    rtn = utils.exception("SimpleStorage: ["+object+"]", "Invalid [id]", 400);
+    rtn = exception("SimpleStorage: ["+object+"]", "Invalid [id]", 400);
     return rtn;
   }
    
@@ -153,7 +152,7 @@ function updateItem(object, item, id) {
     fs.writeFileSync(folder + object + '/' + id, JSON.stringify(current));
     rtn = getItem(object, id);
   } catch (ex) {
-    rtn = null;
+    rtn = exception("SimpleStorage: ["+object+"]", ex.message,400);
   }
 
   return rtn;
@@ -179,6 +178,18 @@ function makeId() {
   rtn = String(Math.random());
   rtn = rtn.substring(2);
   rtn = parseInt(rtn).toString(36);
+
+  return rtn;
+}
+
+// craft an exception msg
+function exception(name, message, code) {
+  var rtn = {};
+
+  rtn.type = "error";
+  rtn.name = (name||"Error");
+  rtn.message = (message||rtn.name);
+  rtn.code = (code||400);
 
   return rtn;
 }
