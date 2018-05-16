@@ -8,7 +8,8 @@
 var http = require('http');
 var querystring = require('querystring');
 
-/// internal modules
+// internal modules
+var storage = require('./simple-storage.js');
 var representation = require('./representor.js');
 var config = require('./config.js');
 
@@ -44,6 +45,10 @@ var reFile = new RegExp('^\/files\/.*','i');
 
 // set up unregister old entries
 setInterval(function(){unregEntries()},config.unregTTL);
+
+// make sure storage is ready
+storage({object:"disco",action:"create"});
+storage({object:"bind",action:"create"});
 
 // request handler
 function handler(req, res) {

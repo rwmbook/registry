@@ -115,8 +115,13 @@ function getItem(object, id) {
 // create a storage object (folder)
 function createObject(object) {
   try {
+    if(folder && folder !==null) {
+      if(!fs.existsSync(folder)) {
+        fs.mkdirSync(folder);
+      }
+    }
     if(object && object !== null) {
-      fs.mkdirSync(object);
+      fs.mkdirSync(folder + object);
     } else {
       rtn = exception("SimpleStorage: ["+object+"]", "unable to create object", 400);
     }
