@@ -4,7 +4,7 @@
  * Mike Amundsen (@mamund)
  *******************************************************/
 
-var storage = require('./../storage.js');
+var storage = require('./../simple-storage.js');
 var utils = require('./../connectors/utils.js');
 
 module.exports = main;
@@ -34,7 +34,7 @@ function main(action, args1, args2, args3) {
 
   switch (action) {
     case 'exists':
-      rtn = (storage(elm, 'item', args1)===null?false:true);
+      rtn = (storage({object:elm, action:'item', id:args1)===null?false:true);
       break;
     case 'props' :
       rtn = utils.setProps(args1,props);
@@ -43,13 +43,13 @@ function main(action, args1, args2, args3) {
       rtn = profile;
       break;
     case 'list':
-      rtn = utils.cleanList(storage(elm, 'list'));
+      rtn = utils.cleanList(storage({object:elm, action:'list'}));
       break;
     case 'read':
-      rtn = utils.cleanList(storage(elm, 'item', args1));
+      rtn = utils.cleanList(storage({object:elm, action:'item', id:args1}));
       break;
     case 'filter':
-      rtn = utils.cleanList(storage(elm, 'filter', args1));
+      rtn = utils.cleanList(storage({object:elm, action:'filter', filter:args1}));
       break;
     case 'add':
       rtn = addEntry(elm, args1, props);
@@ -96,7 +96,7 @@ function addEntry(elm, entry, props) {
     rtn = utils.exception(error);
   }
   else {
-    rtn = storage(elm, 'add', utils.setProps(item,props));
+    rtn = storage({object:elm, action:'add', item:utils.setProps(item,props)});
   }
   
   return rtn;
@@ -106,7 +106,7 @@ function updateEntry(elm, id, entry, props) {
   var rtn, check, item, error;
 
   error = "";
-  check = storage(elm, 'item', id);  
+  check = storage({object:elm, action:'item', id:id});  
   if(check===null) {
     rtn = utils.exception("File Not Found", "No record on file", 404);
   }
@@ -135,7 +135,7 @@ function updateEntry(elm, id, entry, props) {
       rtn = utils.exception(error);
     } 
     else {
-      rtn = storage(elm, 'update', id, utils.setProps(item, props));
+      rtn = storage({object:elm, action:'update', id:id, item:utils.setProps(item, props)});
     }
   }
   
@@ -145,12 +145,12 @@ function updateEntry(elm, id, entry, props) {
 function removeEntry(elm, id) {
   var rtn, check;
   
-  check = storage(elm, 'item', id);
+  check = storage({object:elm, action:'item', id:id});
   if(check===null) {
     rtn = utils.exception("File Not Found", "No record on file", 404);
   }
   else {
-    storage(elm, 'remove', id);
+    storage({object:elm, action:'remove', id:id});
   }
   
   return rtn;
