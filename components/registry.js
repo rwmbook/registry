@@ -31,6 +31,10 @@ function main(action, args1, args2, args3) {
     "dateCreated",
     "dateUpdated"
   ];
+  reqd = [
+    "serviceURL",
+    "serviceName"
+  ];
 
   switch (action) {
     case 'exists':
@@ -70,33 +74,31 @@ function main(action, args1, args2, args3) {
 function addEntry(elm, entry, props) {
   var rtn, item, error;
   
-  error = "";
-  
   item = {}
-  item.serviceURL = (entry.serviceURL||"");
-  item.serviceName = (entry.serviceName||"");
-  item.semanticProfile = (entry.semanticProfile||"");
-  item.requestMediaType = (entry.requestMediaType||"*/*");
-  item.responseMediaType = (entry.responseMediaType||"*/*");
-  item.healthURL = (entry.healthURL||"");
-  item.healthTTL = (entry.healthTTL||"60000");
-  item.healthLastPing = (entry.healthLastPing||"");
-  item.renewTTL = (entry.renewTTL||"600000");
-  item.renewLastPing = (entry.renewLastPing||"");
-  item.tags = (entry.tags||"");
-  
-  if(item.serviceURL === "") {
-    error += "Missing serviceURL ";
+  for(i=0,x=props.length;i<x;i++) {
+    if(props[i]!=="id") {
+      item[props] = (entry[props]||"");
+    }
   }
-  if(item.serviceName === "") {
-    error += "Missing serviceName ";
-  } 
-  
+
+  error = "";
+  for(i=0,x=reqd.length;i<x;i++) {
+    if(item[reqd]==="") {
+      error += "Missing "+ props + " ";
+    }
+  }
+
   if(error.length!==0) {
     rtn = utils.exception(error);
   }
   else {
-    rtn = storage({object:elm, action:'add', item:utils.setProps(item,props)});
+    rtn = storage(
+      {
+        object:elm, 
+        action:'add', 
+        item:utils.setProps(item,props)
+      }
+    );
   }
   
   return rtn;
@@ -105,37 +107,37 @@ function addEntry(elm, entry, props) {
 function updateEntry(elm, id, entry, props) {
   var rtn, check, item, error;
 
-  error = "";
   check = storage({object:elm, action:'item', id:id});  
   if(check===null) {
     rtn = utils.exception("File Not Found", "No record on file", 404);
   }
   else {
     item = check;
-    item.serviceURL = (entry.serviceURL===undefined?check.serviceURL:entry.serviceURL);
-    item.serviceName = (entry.serviceName===undefined?check.serviceName:entry.serviceName);
-    item.semanticProfile = (entry.semanticProfile===undefined?check.semanticProfile:entry.semanticProfile);
-    item.requestMediaType = (entry.requestMediaType===undefined?check.requestMediaType:entry.requestMediaType);
-    item.responseMediaType = (entry.responseMediaType===undefined?check.responseMediaType:entry.responseMediaType);
-    item.healthURL = (entry.healthURL===undefined?check.healthURL:entry.healthURL);
-    item.healthTTL = (entry.healthTTL===undefined?check.healthTTL:entry.healthTTL);
-    item.healthLastPing = (entry.healthLastPing===undefined?check.healthListPing:entry.healthLastPing);
-    item.renewTTL = (entry.renewTTL===undefined?check.renewTTL:entry.renewTTL);
-    item.renewLastPing = (entry.renewLastPing===undefined?check.renewLastPing:entry.renewLastPing);
-    item.tags = (entry.tags===undefined?check.tags:entry.tags);
-    
-    if(item.serviceURL === "") {
-      error += "Missing serviceURL ";
+    for(i=0,x=props.length; i<x; i++) {
+      if(props!=="id") {
+        item[props] = (entry[props]===undefined?check[props]:entry[props]);
+      }
     }
-    if(item.serviceName === "") {
-      error += "Missing serviceName ";
-    } 
-      
+   
+    error = "";
+    for(i=0,x=reqd.length;i<x;i++) {
+      if(item[reqd]==="") {
+        error += "Missing "+ props + " ";
+      }
+    }
+     
     if(error!=="") {
       rtn = utils.exception(error);
     } 
     else {
-      rtn = storage({object:elm, action:'update', id:id, item:utils.setProps(item, props)});
+      rtn = storage(
+        {
+          object:elm, 
+          action:'update', 
+          id:id, 
+          item:utils.setProps(item, props)
+        }
+      );
     }
   }
   
