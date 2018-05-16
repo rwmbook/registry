@@ -33,6 +33,9 @@ function main(args) {
   var item = args.item||{};
 
   switch (action) {
+    case 'create':
+      rtn = createObject(object);
+      break;
     case 'list':
       rtn = getList(object);
       break;
@@ -107,6 +110,19 @@ function getItem(object, id) {
   }
 
   return rtn;
+}
+
+// create a storage object (folder)
+function createObject(object) {
+  try {
+    if(object && object !== null) {
+      fs.mkdirSync(object);
+    } else {
+      rtn = exception("SimpleStorage: ["+object+"]", "unable to create object", 400);
+    }
+  } catch(ex) {
+    rtn = exception("SimpleStorage: ["+object+"]", ex.message, 400);
+  }
 }
 
 // add a new item
