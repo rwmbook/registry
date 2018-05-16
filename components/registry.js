@@ -34,7 +34,7 @@ function main(action, args1, args2, args3) {
 
   switch (action) {
     case 'exists':
-      rtn = (storage({object:elm, action:'item', id:args1)===null?false:true);
+      rtn = (storage({object:elm, action:'item', id:args1})===null?false:true);
       break;
     case 'props' :
       rtn = utils.setProps(args1,props);
