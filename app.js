@@ -33,6 +33,8 @@ var htmlType = 'text/html';
 var formType = 'application/x-www-form-urlencoded';
 var csType = '';
 var csAccept = '';
+var defaultHealthTTL = 120000;
+var defaultRenewTTL = 600000;
 
 // routing rules
 var reHome = new RegExp('^\/$','i');
@@ -43,8 +45,9 @@ var reFind = new RegExp('^\/find\/.*','i');
 var reBind = new RegExp('^\/bind\/.*','i');
 var reFile = new RegExp('^\/files\/.*','i');
 
-// set up unregister old entries
-setInterval(function(){unregEntries()},config.unregTTL);
+// set up unreg and healthchecks
+setInterval(function(){unregEntries()},config.unregTTL||defaultRenewTTL);
+setInterval(function(){healthChecks()},config.healthTTL||defaultHealthTTL);
 
 // make sure storage is ready
 storage({object:"disco",action:"create"});
@@ -183,7 +186,7 @@ console.log('registry service listening on port '+port);
 
 // handle evicting bad entries
 function unregEntries() {
-  var list;
+  var i,x,list;
 
   list = registry('list');
   console.log('unregEntries');
@@ -202,11 +205,73 @@ function unregEntries() {
       if(list[i].dateUpdated!=='' && list[i].renewLastPing==='') {
         d = new Date(list[i].dateUpdated);
         t = new Date();
-        d.setTime(d.getTime() + 600000);
+        d.setTime(d.getTime() + parseInt(config.unregTTL||defaultRenewTTL));
         if(t>d) {
           registry('remove',list[i].id);
         }
       }
+      // unable to renew or health-check
+      if((!list[i].renewTTL || list[i].renewTTL==='') && (!list[i].healthURL || list[i].healthURL==='')) {
+        registry('remove',list[i].id);
+      }
     }
   }
+}
+
+// run healthchecks
+function healthChecks() {
+  var i,x,list;
+
+  console.log('healthChecks');
+
+  list = registry('list');
+  if(list) {
+    for(i=0,x=list.length;i<x;i++) {
+      // does this service define a healthURL?
+      if(list[i].healthURL && list[i].healthURL!=="") {
+        
+        ping = (list[i].healthLastPing && list[i].healthLastPing!==''?list[i].healthLastPing:list[i].dateUpdated);
+        d = new Date(ping);
+        d.setTime(d.getTime() + parseInt(config.healthTTL||defaultHealthTTL));
+        t = new Date();
+        if(t>d) {
+          healthPing(list[i],healthErr,healthSuccess);
+        }  
+      }
+    }
+  }
+}
+
+// handle the actual health ping
+function healthPing(service, errFunc, successFunc) {
+
+  // run a request against the provided healthURL
+  http.get(service.healthURL, function(rsp) {
+    rsp.setEncoding('utf8');
+    var body = '';
+    rsp.on("data", function(data){body += data});
+    rsp.on("end", function() {
+      if(successFunc) {
+        successFunc(service);
+      }
+    });
+  }).on("error", function(e) {
+    if(errFunc) {
+      errFunc(service);
+    }
+  }); 
+}
+
+// update the service record
+function healthSuccess(service) {
+    item = registry('read',service.id);
+    if(item) {
+      item.healthLastPing = new Date();
+      registry('update', service.id, item);
+    }
+}
+
+// do nothing for now
+function healthErr(service) {
+  // TODO
 }

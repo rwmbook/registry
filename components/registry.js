@@ -74,20 +74,24 @@ function main(action, args1, args2, args3) {
 function addEntry(elm, entry, props) {
   var rtn, item, error;
   
+  console.log(entry);
+  
   item = {}
   for(i=0,x=props.length;i<x;i++) {
     if(props[i]!=="id") {
-      item[props] = (entry[props]||"");
+      item[props[i]] = (entry[props[i]]||"");
     }
   }
 
   error = "";
   for(i=0,x=reqd.length;i<x;i++) {
-    if(item[reqd]==="") {
-      error += "Missing "+ props + " ";
+    if(item[reqd[i]]==="") {
+      error += "Missing "+ reqd[i] + " ";
     }
   }
 
+  console.log(utils.setProps(item,props));
+  
   if(error.length!==0) {
     rtn = utils.exception(error);
   }
@@ -114,15 +118,15 @@ function updateEntry(elm, id, entry, props) {
   else {
     item = check;
     for(i=0,x=props.length; i<x; i++) {
-      if(props!=="id") {
-        item[props] = (entry[props]===undefined?check[props]:entry[props]);
+      if(props[i]!=="id") {
+        item[props[i]] = (entry[props[i]]===undefined?check[props[i]]:entry[props[i]]);
       }
     }
    
     error = "";
     for(i=0,x=reqd.length;i<x;i++) {
-      if(item[reqd]==="") {
-        error += "Missing "+ props + " ";
+      if(item[reqd[i]]==="") {
+        error += "Missing "+ reqd[i] + " ";
       }
     }
      
