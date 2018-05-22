@@ -199,6 +199,7 @@ function unregEntries() {
         d.setTime(d.getTime() + parseInt(list[i].renewTTL));
         if(t>d) {
           registry('remove',list[i].id);
+          console.log('removed (expired): '+list[i].id + ' -- ' + list[i].serviceURL);
         }
       }
       // never renewed
@@ -208,12 +209,14 @@ function unregEntries() {
         d.setTime(d.getTime() + parseInt(config.unregTTL||defaultRenewTTL));
         if(t>d) {
           registry('remove',list[i].id);
+          console.log('removed (never renewed): '+list[i].id + ' -- ' + list[i].serviceURL);
         }
       }
       // unable to renew or health-check
       if((!list[i].renewTTL || list[i].renewTTL==='') && (!list[i].healthURL || list[i].healthURL==='')) {
-        registry('remove',list[i].id);
-      }
+         registry('remove',list[i].id);
+         console.log('removed (invalid): '+list[i].id + ' -- ' + list[i].serviceURL);
+       }
     }
   }
 }
@@ -264,14 +267,24 @@ function healthPing(service, errFunc, successFunc) {
 
 // update the service record
 function healthSuccess(service) {
+  var item;
+    
+  try {
     item = registry('read',service.id);
     if(item) {
       item.healthLastPing = new Date();
       registry('update', service.id, item);
     }
+  } catch(e) {}
 }
 
-// do nothing for now
+// unable to get healthcheck, remove it
 function healthErr(service) {
-  // TODO
+
+  try {
+    registry('remove',service.id);
+    console.log('removed (healthErr): ' + service.id + ' -- ' + service.serviceURL);
+  } catch(e) {
+    console.log("error dropping service record: " + e.message);
+  }
 }

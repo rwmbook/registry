@@ -74,8 +74,6 @@ function main(action, args1, args2, args3) {
 function addEntry(elm, entry, props) {
   var rtn, item, error;
   
-  console.log(entry);
-  
   item = {}
   for(i=0,x=props.length;i<x;i++) {
     if(props[i]!=="id") {
@@ -90,8 +88,6 @@ function addEntry(elm, entry, props) {
     }
   }
 
-  console.log(utils.setProps(item,props));
-  
   if(error.length!==0) {
     rtn = utils.exception(error);
   }
