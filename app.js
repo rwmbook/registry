@@ -33,7 +33,7 @@ var htmlType = 'text/html';
 var formType = 'application/x-www-form-urlencoded';
 var csType = '';
 var csAccept = '';
-var defaultHealthTTL = 120000;
+var defaultHealthTTL = 300000;
 var defaultRenewTTL = 600000;
 
 // routing rules
