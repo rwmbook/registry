@@ -13,17 +13,17 @@ var storage = require('./simple-storage.js');
 var representation = require('./representor.js');
 var config = require('./config.js');
 
-// connector modules
-var home = require('./connectors/home.js');
-var reg = require('./connectors/reg.js');
-var unreg = require('./connectors/unreg.js');
-var renew = require('./connectors/renew.js');
-var find = require('./connectors/find.js');
-var bind = require('./connectors/bind.js');
+// set up connector modules
+var connectors = {};
+connectors.home = require('./connectors/home.js');
+connectors.reg = require('./connectors/reg.js');
+connectors.unreg = require('./connectors/unreg.js');
+connectors.renew = require('./connectors/renew.js');
+connectors.find = require('./connectors/find.js');
+connectors.bind = require('./connectors/bind.js');
+
 var utils = require('./connectors/utils.js');
-
 var registry = require('./components/registry.js');
-
 var healthChecks = require('./registry-health.js');
 var renewalChecks = require('./registry-renewals.js');
 
@@ -40,12 +40,6 @@ var defaultHealthTTL = 300000;
 var defaultRenewTTL = 600000;
 
 // routing rules
-var reHome = new RegExp('^\/$','i');
-var reReg = new RegExp('^\/reg\/.*','i');
-var reRenew = new RegExp('^\/renew\/.*','i');
-var reUnreg = new RegExp('^\/unreg\/.*','i');
-var reFind = new RegExp('^\/find\/.*','i');
-var reBind = new RegExp('^\/bind\/.*','i');
 var reFile = new RegExp('^\/files\/.*','i');
 
 // set up renewals and healthchecks
@@ -97,43 +91,16 @@ function handler(req, res) {
     return;
   }
 
-  // home handler
-  if(reHome.test(req.url)) {
-    flg = true;
-    doc = home(req, res, parts, handleResponse);
+  // iterate on connectors
+  for(var c in connectors) {
+    conn = connectors[c];
+    if(conn.path.test(req.url)) {
+      flg = true;
+      doc = conn.run(req, res, parts, handleResponse);
+    }
   }
-
-  // register handler
-  if(reReg.test(req.url)) {
-    flg = true;
-    doc = reg(req, res, parts, handleResponse);
-  }
-
-  // unregister handler
-  if(reUnreg.test(req.url)) {
-    flg = true;
-    doc = unreg(req, res, parts, handleResponse);
-  }
-
-  // renewal handler
-  if(reRenew.test(req.url)) {
-    flg=true;
-    doc = renew(req, res, parts, handleResponse);
-  }   
-
-  // find handler
-  if(reFind.test(req.url)) {
-    flg = true;
-    doc = find(req, res, parts, handleResponse);
-  }
-
-  // bind handler
-  if(reBind.test(req.url)) {
-    flg = true;
-    doc = bind(req, res, parts, handleResponse);
-  }
-
-  // file handler
+  
+  // general file handler
   try {
     if(flg===false && reFile.test(req.url)) {
       flg = true;

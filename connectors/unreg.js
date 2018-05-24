@@ -10,8 +10,10 @@ var utils = require('./utils.js');
 var registry = require('./../components/registry.js');
 
 var gTitle = "DISCO Registry";
+var pathMatch = new RegExp('^\/unreg\/.*','i');
 
-module.exports = main;
+exports.path = pathMatch;
+exports.run = main;
 
 function main(req, res, parts, respond) {
 

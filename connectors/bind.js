@@ -9,10 +9,13 @@ var registry = require('./../components/registry.js');
 var binding = require('./../components/binding.js');
 var utils = require('./utils.js');
 var wstl = require('./../wstl.js');
-var gTitle = "DISCO Registry";
 var config = require('./../config.js');
 
-module.exports = main;
+var gTitle = "DISCO Registry";
+var pathMatch = new RegExp('^\/bind\/.*','i');
+
+exports.path = pathMatch;
+exports.run = main;
 
 function main(req, res, parts, respond) {
 

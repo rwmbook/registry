@@ -4,14 +4,20 @@
  * Mike Amundsen (@mamund)
  *******************************************************/
 
+// we MUST export at least
+// 1) path -- match regexp
+// 2) run -- http handler
+exports.path = pathMatch;
+exports.run = main;
+
+
 // handles HTTP resource operations 
 var wstl = require('./../wstl.js');
 var utils = require('./utils.js');
 var component = require('./../components/registry.js');
 
 var gTitle = "DISCO Registry";
-
-module.exports = main;
+var pathMatch = new RegExp('^\/$','i');
 
 function main(req, res, parts, respond) {
 

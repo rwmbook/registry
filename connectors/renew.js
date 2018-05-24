@@ -8,9 +8,12 @@
 var registry = require('./../components/registry.js');
 var utils = require('./utils.js');
 var wstl = require('./../wstl.js');
-var gTitle = "DISCO Registry";
 
-module.exports = main;
+var gTitle = "DISCO Registry";
+var pathMatch = new RegExp('^\/renew\/.*','i');
+
+exports.path = pathMatch;
+exports.run = main;
 
 function main(req, res, parts, respond) {
 
