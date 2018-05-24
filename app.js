@@ -24,6 +24,9 @@ var utils = require('./connectors/utils.js');
 
 var registry = require('./components/registry.js');
 
+var healthChecks = require('./registry-health.js');
+var renewalChecks = require('./registry-renewals.js');
+
 // shared vars
 var root = '';
 var port = (process.env.PORT || '8282');
@@ -45,9 +48,15 @@ var reFind = new RegExp('^\/find\/.*','i');
 var reBind = new RegExp('^\/bind\/.*','i');
 var reFile = new RegExp('^\/files\/.*','i');
 
-// set up unreg and healthchecks
-setInterval(function(){unregEntries()},config.unregTTL||defaultRenewTTL);
-setInterval(function(){healthChecks()},config.healthTTL||defaultHealthTTL);
+// set up renewals and healthchecks
+setInterval(
+  function(){renewalChecks({registry:registry, config:config})},
+  config.unregTTL||defaultRenewTTL
+);
+setInterval(
+  function(){healthChecks({registry:registry, config:config})},
+  config.healthTTL||defaultHealthTTL
+);
 
 // make sure storage is ready
 storage({object:"disco",action:"create"});
@@ -184,107 +193,4 @@ function sendResponse(req, res, body, code, headers) {
 http.createServer(handler).listen(port);
 console.log('registry service listening on port '+port);
 
-// handle evicting bad entries
-function unregEntries() {
-  var i,x,list;
 
-  list = registry('list');
-  console.log('unregEntries');
-  if(list) {
-    for (i=0,x=list.length;i<x;i++) {
-      // expired renewals
-      if(list[i].renewLastPing!=='' && list[i].renewTTL!=='') {
-        d = new Date(list[i].renewLastPing);
-        t = new Date();
-        d.setTime(d.getTime() + parseInt(list[i].renewTTL));
-        if(t>d) {
-          registry('remove',list[i].id);
-          console.log('removed (expired): '+list[i].id + ' -- ' + list[i].serviceURL);
-        }
-      }
-      // never renewed
-      if(list[i].dateUpdated!=='' && list[i].renewLastPing==='') {
-        d = new Date(list[i].dateUpdated);
-        t = new Date();
-        d.setTime(d.getTime() + parseInt(config.unregTTL||defaultRenewTTL));
-        if(t>d) {
-          registry('remove',list[i].id);
-          console.log('removed (never renewed): '+list[i].id + ' -- ' + list[i].serviceURL);
-        }
-      }
-      // unable to renew or health-check
-      if((!list[i].renewTTL || list[i].renewTTL==='') && (!list[i].healthURL || list[i].healthURL==='')) {
-         registry('remove',list[i].id);
-         console.log('removed (invalid): '+list[i].id + ' -- ' + list[i].serviceURL);
-       }
-    }
-  }
-}
-
-// run healthchecks
-function healthChecks() {
-  var i,x,list;
-
-  console.log('healthChecks');
-
-  list = registry('list');
-  if(list) {
-    for(i=0,x=list.length;i<x;i++) {
-      // does this service define a healthURL?
-      if(list[i].healthURL && list[i].healthURL!=="") {
-        
-        ping = (list[i].healthLastPing && list[i].healthLastPing!==''?list[i].healthLastPing:list[i].dateUpdated);
-        d = new Date(ping);
-        d.setTime(d.getTime() + parseInt(config.healthTTL||defaultHealthTTL));
-        t = new Date();
-        if(t>d) {
-          healthPing(list[i],healthErr,healthSuccess);
-        }  
-      }
-    }
-  }
-}
-
-// handle the actual health ping
-function healthPing(service, errFunc, successFunc) {
-
-  // run a request against the provided healthURL
-  http.get(service.healthURL, function(rsp) {
-    rsp.setEncoding('utf8');
-    var body = '';
-    rsp.on("data", function(data){body += data});
-    rsp.on("end", function() {
-      if(successFunc) {
-        successFunc(service);
-      }
-    });
-  }).on("error", function(e) {
-    if(errFunc) {
-      errFunc(service);
-    }
-  }); 
-}
-
-// update the service record
-function healthSuccess(service) {
-  var item;
-    
-  try {
-    item = registry('read',service.id);
-    if(item) {
-      item.healthLastPing = new Date();
-      registry('update', service.id, item);
-    }
-  } catch(e) {}
-}
-
-// unable to get healthcheck, remove it
-function healthErr(service) {
-
-  try {
-    registry('remove',service.id);
-    console.log('removed (healthErr): ' + service.id + ' -- ' + service.serviceURL);
-  } catch(e) {
-    console.log("error dropping service record: " + e.message);
-  }
-}
