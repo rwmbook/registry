@@ -11,7 +11,12 @@ var querystring = require('querystring');
 // internal modules
 var storage = require('./simple-storage.js');
 var representation = require('./representor.js');
-var config = require('./config.js');
+var config = require('./config.js'); 
+var utils = require('./connectors/utils.js');
+
+var registry = require('./components/registry.js');
+var healthChecks = require('./registry-health.js');
+var renewalChecks = require('./registry-renewals.js');
 
 // set up connector modules
 var connectors = {};
@@ -21,11 +26,6 @@ connectors.unreg = require('./connectors/unreg.js');
 connectors.renew = require('./connectors/renew.js');
 connectors.find = require('./connectors/find.js');
 connectors.bind = require('./connectors/bind.js');
-
-var utils = require('./connectors/utils.js');
-var registry = require('./components/registry.js');
-var healthChecks = require('./registry-health.js');
-var renewalChecks = require('./registry-renewals.js');
 
 // shared vars
 var root = '';
