@@ -12,6 +12,16 @@ var component = require('./../components/registry.js');
 var gTitle = "DISCO Registry";
 var pathMatch = new RegExp('^\/find\/.*','i');
 
+var actions = [
+  {name:"dashboard",href:"/",rel:["self", "home", "dashboard", "collection"]},
+  {name:"registerLink",href:"/reg/",rel:["create-form", "register", "reglink"]},
+  {name:"unregisterLink",href:"/unreg/",rel:["delete-form", "unregister", "unreglink"]},
+  {name:"renewLink",href:"/renew/",rel:["edit-form", "renew", "renewlink"]},
+  {name:"findLink",href:"/find/",rel:["search", "find", "findlink"]},
+  {name:"bindLink",href:"/bind/",rel:["search", "bind", "bindlink"]},
+  {name:"findForm", href:"/find/",rel:["search", "find", "findform"]}
+];
+
 exports.path = pathMatch;
 exports.run = main;
 
@@ -36,14 +46,11 @@ function sendPage(req, res, respond, args) {
   related = {};
   content = "";
   
-  coll = wstl.append({name:"dashboard",href:"/",rel:["self", "home", "dashboard", "collection"], root:root},coll);
-  coll = wstl.append({name:"registerLink",href:"/reg/",rel:["create-form", "register", "reglink"], root:root},coll);
-  coll = wstl.append({name:"unregisterLink",href:"/unreg/",rel:["delete-form", "unregister", "unreglink"], root:root},coll);
-  coll = wstl.append({name:"renewLink",href:"/renew/",rel:["edit=form", "renew", "renewlink"], root:root},coll);
-  coll = wstl.append({name:"findLink",href:"/find/",rel:["search", "find", "findlink"], root:root},coll);
-  coll = wstl.append({name:"bindLink",href:"/bind/",rel:["search", "bind", "bindlink"], root:root},coll);
-  
-  coll = wstl.append({name:"findForm", href:"/find/",rel:["search", "find", "findform"], root:root}, coll);
+    // append current root and load actions
+  for(var i=0,x=actions.length;i<x;i++) {
+    actions[i].root = root;
+    coll = wstl.append(actions[i],coll);
+  }
   
   content =  '<div>';
   content += '<h2>Find a Service</h2>';
